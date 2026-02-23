@@ -1,35 +1,51 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: '#6366f1',
+        tabBarInactiveTintColor: '#9ca3af',
+        tabBarStyle: {
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarShowLabel: false,
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home" color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="search"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarShowLabel: false,
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search" color={color} size={size} />
+          ),
         }}
       />
+      <Tabs.Screen
+        name="random"
+        options={{
+          tabBarShowLabel: false,
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "dice" : "dice-outline"} color={color} size={size} />
+          ),
+        }}
+      />
+      {/* Hide map tab since no Maps SDK */}
+      <Tabs.Screen name="map" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -1,98 +1,135 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import PlaceCard from '@/components/PlaceCard';
+import { PLACE_STATUS } from '@/lib/constants';
+import { deletePlace, listPlaces, markAsVisited, updatePlace } from '@/lib/services/places';
+import type { Place } from '@/lib/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'all' | 'want_to_go' | 'visited'>('all');
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const loadPlaces = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await listPlaces();
+      setPlaces(data);
+    } catch (e) {
+      console.error('Failed to load places:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadPlaces();
+    }, [loadPlaces]),
+  );
+
+  const filteredPlaces = places.filter((p) => {
+    if (tab === 'all') return true;
+    return p.status === tab;
+  });
+
+  const handleDelete = (place: Place) => {
+    Alert.alert('Delete', `Remove "${place.name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deletePlace(place.$id);
+          loadPlaces();
+        },
+      },
+    ]);
+  };
+
+  const handleToggleStatus = async (place: Place) => {
+    if (place.status === PLACE_STATUS.WANT_TO_GO) {
+      await markAsVisited(place.$id);
+    } else {
+      await updatePlace(place.$id, { status: PLACE_STATUS.WANT_TO_GO });
+    }
+    loadPlaces();
+  };
+
+  return (
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="bg-white px-5 pb-3 pt-14">
+        <Text className="text-2xl font-bold text-gray-900">Your Places</Text>
+        <Text className="mt-1 text-sm text-gray-400">
+          {places.length} saved · {places.filter((p) => p.status === PLACE_STATUS.WANT_TO_GO).length} to visit
+        </Text>
+      </View>
+
+      {/* Filter tabs */}
+      <View className="flex-row gap-2 bg-white px-5 pb-3">
+        {(['all', 'want_to_go', 'visited'] as const).map((t) => (
+          <Pressable
+            key={t}
+            onPress={() => setTab(t)}
+            className={`rounded-full px-4 py-2 ${tab === t ? 'bg-indigo-500' : 'bg-gray-100'}`}
+          >
+            <Text
+              className={`text-sm font-medium ${tab === t ? 'text-white' : 'text-gray-600'}`}
+            >
+              {t === 'all' ? 'All' : t === 'want_to_go' ? 'Want to go' : 'Visited'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* List */}
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#6366f1" />
+        </View>
+      ) : filteredPlaces.length === 0 ? (
+        <View className="flex-1 items-center justify-center px-10">
+          <Ionicons name="restaurant-outline" size={48} color="#d1d5db" />
+          <Text className="mt-4 text-center text-base text-gray-400">
+            {tab === 'all'
+              ? 'No places saved yet.\nTap + to add your first one!'
+              : 'No places in this category.'}
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredPlaces}
+          keyExtractor={(item) => item.$id}
+          contentContainerClassName="px-4 pt-3 pb-24"
+          renderItem={({ item }) => (
+            <PlaceCard
+              place={item}
+              onPress={() => router.push({ pathname: '/add-place', params: { id: item.$id } })}
+              onDelete={() => handleDelete(item)}
+              onToggleStatus={() => handleToggleStatus(item)}
+            />
+          )}
+        />
+      )}
+
+      {/* FAB */}
+      <Pressable
+        onPress={() => router.push('/add-place')}
+        className="absolute bottom-24 right-5 h-14 w-14 items-center justify-center rounded-full bg-indigo-500 shadow-lg"
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </Pressable>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
