@@ -24,6 +24,7 @@ export default function AddPlaceScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!id;
+  const isWeb = Platform.OS === 'web';
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -100,7 +101,11 @@ export default function AddPlaceScreen() {
       } else {
         await createPlace(form);
       }
-      router.back();
+      if (isEditing) {
+        router.back();
+      } else {
+        router.replace('/(tabs)' as any);
+      }
     } catch (e: any) {
       Alert.alert('Error', e?.message ?? 'Something went wrong.');
     } finally {
@@ -167,7 +172,13 @@ export default function AddPlaceScreen() {
               placeholderTextColor="#9ca3af"
             />
             {showCuisineDropdown && filteredCuisines.length > 0 && (
-              <View className="absolute left-0 right-0 top-14 z-10 max-h-40 rounded-xl border border-gray-200 bg-white shadow-lg">
+              <View
+                className={
+                  isWeb
+                    ? 'mt-2 max-h-40 rounded-xl border border-gray-200 bg-white'
+                    : 'absolute left-0 right-0 top-14 z-50 max-h-40 rounded-xl border border-gray-200 bg-white shadow-lg'
+                }
+              >
                 <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                   {filteredCuisines.map((c) => (
                     <Pressable
@@ -202,7 +213,13 @@ export default function AddPlaceScreen() {
               placeholderTextColor="#9ca3af"
             />
             {showNeighborhoodDropdown && filteredNeighborhoods.length > 0 && (
-              <View className="absolute left-0 right-0 top-14 z-10 max-h-40 rounded-xl border border-gray-200 bg-white shadow-lg">
+              <View
+                className={
+                  isWeb
+                    ? 'mt-2 max-h-40 rounded-xl border border-gray-200 bg-white'
+                    : 'absolute left-0 right-0 top-14 z-50 max-h-40 rounded-xl border border-gray-200 bg-white shadow-lg'
+                }
+              >
                 <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                   {filteredNeighborhoods.map((n) => (
                     <Pressable

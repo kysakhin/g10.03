@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
   Pressable,
   Text,
   View,
@@ -44,6 +45,16 @@ export default function HomeScreen() {
   });
 
   const handleDelete = (place: Place) => {
+    if (Platform.OS === 'web') {
+      const ok = typeof window !== 'undefined' && window.confirm(`Remove "${place.name}"?`);
+      if (!ok) return;
+      (async () => {
+        await deletePlace(place.$id);
+        loadPlaces();
+      })();
+      return;
+    }
+
     Alert.alert('Delete', `Remove "${place.name}"?`, [
       { text: 'Cancel', style: 'cancel' },
       {

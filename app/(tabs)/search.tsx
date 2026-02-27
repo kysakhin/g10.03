@@ -120,54 +120,55 @@ export default function SearchScreen() {
       </View>
 
       {/* Filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="px-5 py-4 gap-2"
-        className="max-h-12 bg-white py-auto"
-      >
-        {/* Status chips */}
-        <FilterChip
-          label="Want to go"
-          active={selectedStatus === PLACE_STATUS.WANT_TO_GO}
-          onPress={() =>
-            setSelectedStatus(
-              selectedStatus === PLACE_STATUS.WANT_TO_GO ? undefined : PLACE_STATUS.WANT_TO_GO,
-            )
-          }
-        />
-        <FilterChip
-          label="Visited"
-          active={selectedStatus === PLACE_STATUS.VISITED}
-          onPress={() =>
-            setSelectedStatus(
-              selectedStatus === PLACE_STATUS.VISITED ? undefined : PLACE_STATUS.VISITED,
-            )
-          }
-        />
-        <View className="mx-1 w-px bg-gray-200" />
-        {/* Cuisine chips */}
-        {cuisines.map((c) => (
+      <View className="bg-white min-h-16">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="px-5 py-3 gap-2"
+        >
+          {/* Status chips */}
           <FilterChip
-            key={c.$id}
-            label={c.name}
-            active={selectedCuisine === c.name}
-            onPress={() => setSelectedCuisine(selectedCuisine === c.name ? undefined : c.name)}
-          />
-        ))}
-        <View className="mx-1 w-px bg-gray-200" />
-        {/* Neighborhood chips */}
-        {neighborhoods.map((n) => (
-          <FilterChip
-            key={n.$id}
-            label={n.name}
-            active={selectedNeighborhood === n.name}
+            label="Want to go"
+            active={selectedStatus === PLACE_STATUS.WANT_TO_GO}
             onPress={() =>
-              setSelectedNeighborhood(selectedNeighborhood === n.name ? undefined : n.name)
+              setSelectedStatus(
+                selectedStatus === PLACE_STATUS.WANT_TO_GO ? undefined : PLACE_STATUS.WANT_TO_GO,
+              )
             }
           />
-        ))}
-      </ScrollView>
+          <FilterChip
+            label="Visited"
+            active={selectedStatus === PLACE_STATUS.VISITED}
+            onPress={() =>
+              setSelectedStatus(
+                selectedStatus === PLACE_STATUS.VISITED ? undefined : PLACE_STATUS.VISITED,
+              )
+            }
+          />
+          <View className="mx-1 w-px bg-gray-200 self-stretch" />
+          {/* Cuisine chips */}
+          {cuisines.map((c) => (
+            <FilterChip
+              key={c.$id}
+              label={c.name}
+              active={selectedCuisine === c.name}
+              onPress={() => setSelectedCuisine(selectedCuisine === c.name ? undefined : c.name)}
+            />
+          ))}
+          <View className="mx-1 w-px bg-gray-200 self-stretch" />
+          {/* Neighborhood chips */}
+          {neighborhoods.map((n) => (
+            <FilterChip
+              key={n.$id}
+              label={n.name}
+              active={selectedNeighborhood === n.name}
+              onPress={() =>
+                setSelectedNeighborhood(selectedNeighborhood === n.name ? undefined : n.name)
+              }
+            />
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Clear filters */}
       {hasFilters && (
